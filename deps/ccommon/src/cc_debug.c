@@ -93,6 +93,15 @@ _stacktrace(int signo)
     raise(signo);
 }
 
+static void
+_close(int signo)
+{
+    log_stderr("received signal %d", signo);
+    //debug_stacktrace(2); /* skipping functions inside signal module */
+    //raise(signo);
+    exit(0);
+}
+
 /* this only works on the default handler given the sig_fn format */
 static void
 _logrotate(int signo)
@@ -145,6 +154,11 @@ debug_setup(debug_options_st *options)
     /* some adjustment on signal handling */
     if (signal_override(SIGSEGV, "printing stacktrace when segfault", 0, 0,
             _stacktrace) < 0) {
+        goto error;
+    }
+
+    if (signal_override(SIGINT, "closing", 0, 0,
+            _close) < 0) {
         goto error;
     }
 
